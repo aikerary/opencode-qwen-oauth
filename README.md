@@ -109,6 +109,20 @@ opencode auth login
 
 Or via the TUI: press `p` to open the provider picker and select **Alibaba (OAuth)**.
 
+### Screenshots
+
+**Login with OAuth:**
+
+![Login OAuth](./assets/Screenshot-for-login-oauth.png)
+
+**Model Selection:**
+
+![Model Selection](./assets/Screenshot%20for%20Model%20Selection.png)
+
+**Model Running:**
+
+![Model Running](./assets/Screenshot%20From%20Model%20Running.png)
+
 ---
 
 ## How it works
