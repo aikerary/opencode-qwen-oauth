@@ -136,8 +136,7 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
             const currentAuth = (await getAuth()) as QwenOAuth
             if (currentAuth.type !== "oauth") return fetch(requestInput, init)
 
-            const missingResourceUrl = !currentAuth.resourceUrl && !cachedResourceUrl
-            if (!currentAuth.access || currentAuth.expires < Date.now() || missingResourceUrl) {
+            async function doRefresh() {
               const tokens = await refreshQwenToken(currentAuth.refresh)
               const newRefresh = tokens.refresh_token || currentAuth.refresh
               const newAccess = tokens.access_token
@@ -160,41 +159,63 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
               currentAuth.access = newAccess
               currentAuth.resourceUrl = newResourceUrl
             }
-
-            const headers = new Headers()
-            if (init?.headers) {
-              if (init.headers instanceof Headers) {
-                init.headers.forEach((value, key) => headers.set(key, value))
-              } else if (Array.isArray(init.headers)) {
-                for (const [key, value] of init.headers) {
-                  if (value !== undefined) headers.set(key, String(value))
-                }
-              } else {
-                for (const [key, value] of Object.entries(init.headers)) {
-                  if (value !== undefined) headers.set(key, String(value))
-                }
+            const missingResourceUrl = !currentAuth.resourceUrl && !cachedResourceUrl
+            if (!currentAuth.access || currentAuth.expires < Date.now() || missingResourceUrl) {
+              try {
+                await doRefresh()
+              } catch (_err) {
+                // Swallow — it'll try the request anyway and refresh on 401/403
               }
             }
 
-            headers.set("Authorization", `Bearer ${currentAuth.access}`)
-            headers.set("User-Agent", `QwenCode/opencode (${process.platform}; ${process.arch})`)
-            headers.set("X-DashScope-CacheControl", "enable")
-            headers.set("X-DashScope-UserAgent", `QwenCode/opencode (${process.platform}; ${process.arch})`)
-            headers.set("X-DashScope-AuthType", "qwen-oauth")
+            function buildRequest() {
+              const headers = new Headers()
+              if (init?.headers) {
+                if (init.headers instanceof Headers) {
+                  init.headers.forEach((value, key) => headers.set(key, value))
+                } else if (Array.isArray(init.headers)) {
+                  for (const [key, value] of init.headers) {
+                    if (value !== undefined) headers.set(key, String(value))
+                  }
+                } else {
+                  for (const [key, value] of Object.entries(init.headers)) {
+                    if (value !== undefined) headers.set(key, String(value))
+                  }
+                }
+              }
 
-            const endpoint = normalizeEndpoint(cachedResourceUrl || currentAuth.resourceUrl)
-            const parsed =
-              requestInput instanceof URL
-                ? requestInput
-                : new URL(typeof requestInput === "string" ? requestInput : (requestInput as Request).url)
+              headers.set("Authorization", `Bearer ${currentAuth.access}`)
+              headers.set("User-Agent", `QwenCode/opencode (${process.platform}; ${process.arch})`)
+              headers.set("X-DashScope-CacheControl", "enable")
+              headers.set("X-DashScope-UserAgent", `QwenCode/opencode (${process.platform}; ${process.arch})`)
+              headers.set("X-DashScope-AuthType", "qwen-oauth")
 
-            const apiSuffix = extractApiSuffix(parsed.pathname)
-            const rewrittenUrl = new URL(endpoint + apiSuffix + parsed.search)
+              const endpoint = normalizeEndpoint(cachedResourceUrl || currentAuth.resourceUrl)
+              const parsed =
+                requestInput instanceof URL
+                  ? requestInput
+                  : new URL(typeof requestInput === "string" ? requestInput : (requestInput as Request).url)
 
-            return fetch(rewrittenUrl, {
-              ...init,
-              headers,
-            })
+              const apiSuffix = extractApiSuffix(parsed.pathname)
+              const rewrittenUrl = new URL(endpoint + apiSuffix + parsed.search)
+
+              return { rewrittenUrl, headers }
+            }
+
+            const req = buildRequest()
+            const response = await fetch(req.rewrittenUrl, { ...init, headers: req.headers })
+
+            if (response.status === 401 || response.status === 403) {
+              try {
+                await doRefresh()
+              } catch (_err) {
+                return response
+              }
+              const retryReq = buildRequest()
+              return fetch(retryReq.rewrittenUrl, { ...init, headers: retryReq.headers })
+            }
+
+            return response
           },
         }
       },
