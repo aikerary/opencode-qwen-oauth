@@ -18,12 +18,12 @@ const DEVICE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
 const DEFAULT_BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 const OAUTH_POLLING_SAFETY_MARGIN_MS = 3000
 
-export interface PkceCodes {
+interface PkceCodes {
   verifier: string
   challenge: string
 }
 
-export async function generatePKCE(): Promise<PkceCodes> {
+async function generatePKCE(): Promise<PkceCodes> {
   const verifier = generateRandomString(43)
   const encoder = new TextEncoder()
   const data = encoder.encode(verifier)
@@ -32,7 +32,7 @@ export async function generatePKCE(): Promise<PkceCodes> {
   return { verifier, challenge }
 }
 
-export function generateRandomString(length: number): string {
+function generateRandomString(length: number): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
   const bytes = crypto.getRandomValues(new Uint8Array(length))
   return Array.from(bytes)
@@ -40,7 +40,7 @@ export function generateRandomString(length: number): string {
     .join("")
 }
 
-export function base64UrlEncode(buffer: ArrayBuffer): string {
+function base64UrlEncode(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
   const binary = String.fromCharCode(...bytes)
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
@@ -78,7 +78,7 @@ async function refreshQwenToken(refreshToken: string): Promise<QwenTokenResponse
   return response.json() as Promise<QwenTokenResponse>
 }
 
-export function normalizeEndpoint(resourceUrl: string | undefined): string {
+function normalizeEndpoint(resourceUrl: string | undefined): string {
   if (!resourceUrl) return DEFAULT_BASE_URL
 
   let url = resourceUrl.startsWith("http") ? resourceUrl : `https://${resourceUrl}`
@@ -90,7 +90,7 @@ export function normalizeEndpoint(resourceUrl: string | undefined): string {
   return url
 }
 
-export function extractApiSuffix(pathname: string): string {
+function extractApiSuffix(pathname: string): string {
   const v1Index = pathname.lastIndexOf("/v1")
   if (v1Index === -1) return pathname
   return pathname.slice(v1Index + 3)
@@ -136,7 +136,8 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
             const currentAuth = (await getAuth()) as QwenOAuth
             if (currentAuth.type !== "oauth") return fetch(requestInput, init)
 
-            if (!currentAuth.access || currentAuth.expires < Date.now()) {
+            const missingResourceUrl = !currentAuth.resourceUrl && !cachedResourceUrl
+            if (!currentAuth.access || currentAuth.expires < Date.now() || missingResourceUrl) {
               const tokens = await refreshQwenToken(currentAuth.refresh)
               const newRefresh = tokens.refresh_token || currentAuth.refresh
               const newAccess = tokens.access_token
