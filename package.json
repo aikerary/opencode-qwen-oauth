@@ -1,5 +1,5 @@
 {
-  "name": "opencode-qwen-auth",
+  "name": "opencode-qwen-oauth",
   "version": "0.1.0",
   "description": "OpenCode plugin for Qwen/Alibaba Cloud OAuth authentication (device code + PKCE) — no API key needed",
   "type": "module",
