@@ -17,6 +17,10 @@ const TOKEN_URL = "https://chat.qwen.ai/api/v1/oauth2/token"
 const DEVICE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
 const DEFAULT_BASE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 const OAUTH_POLLING_SAFETY_MARGIN_MS = 3000
+const MAX_RATE_LIMIT_RETRIES = 5
+const INITIAL_RATE_LIMIT_DELAY_MS = 3000
+const RATE_LIMIT_BACKOFF_MULTIPLIER = 3
+const MAX_RATE_LIMIT_DELAY_MS = 30000
 
 interface PkceCodes {
   verifier: string
@@ -203,7 +207,12 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
             }
 
             const req = buildRequest()
-            const response = await fetch(req.rewrittenUrl, { ...init, headers: req.headers })
+            let response: Response
+            try {
+              response = await fetch(req.rewrittenUrl, { ...init, headers: req.headers })
+            } catch (error) {
+              throw error
+            }
 
             if (response.status === 401 || response.status === 403) {
               try {
@@ -213,6 +222,33 @@ export const QwenAuthPlugin = async (input: PluginInput): Promise<Hooks> => {
               }
               const retryReq = buildRequest()
               return fetch(retryReq.rewrittenUrl, { ...init, headers: retryReq.headers })
+            }
+
+            if (response.status === 429) {
+              const retryAfterHeader = response.headers.get("retry-after")
+              const retryAfterMsHeader = response.headers.get("retry-after-ms")
+              let waitMs = INITIAL_RATE_LIMIT_DELAY_MS
+
+              if (retryAfterMsHeader) {
+                waitMs = parseInt(retryAfterMsHeader, 10) || waitMs
+              } else if (retryAfterHeader) {
+                waitMs = (parseInt(retryAfterHeader, 10) || 1) * 1000
+              }
+
+              for (let attempt = 1; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+                await sleep(waitMs)
+
+                try {
+                  response = await fetch(req.rewrittenUrl, { ...init, headers: req.headers })
+                  if (response.status !== 429) {
+                    break
+                  }
+                  waitMs = Math.min(waitMs * RATE_LIMIT_BACKOFF_MULTIPLIER, MAX_RATE_LIMIT_DELAY_MS)
+                } catch (_error) {
+                  if (attempt === MAX_RATE_LIMIT_RETRIES) throw _error
+                  waitMs = Math.min(waitMs * RATE_LIMIT_BACKOFF_MULTIPLIER, MAX_RATE_LIMIT_DELAY_MS)
+                }
+              }
             }
 
             return response
