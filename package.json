@@ -1,5 +1,5 @@
 {
-  "name": "opencode-qwen-oauth",
+  "name": "opencode-alibaba-oauth",
   "version": "0.1.0",
   "description": "OpenCode plugin for Qwen/Alibaba Cloud OAuth authentication (device code + PKCE) — no API key needed",
   "type": "module",
@@ -9,11 +9,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aikerary/opencode-qwen-oauth.git"
+    "url": "https://github.com/aikerary/opencode-alibaba-oauth.git"
   },
-  "homepage": "https://github.com/aikerary/opencode-qwen-oauth#readme",
+  "homepage": "https://github.com/aikerary/opencode-alibaba-oauth#readme",
   "bugs": {
-    "url": "https://github.com/aikerary/opencode-qwen-oauth/issues"
+    "url": "https://github.com/aikerary/opencode-alibaba-oauth/issues"
   },
   "exports": {
     ".": {

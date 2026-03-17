@@ -1,4 +1,4 @@
-# Contributing to opencode-qwen-oauth
+# Contributing to opencode-alibaba-oauth
 
 Thank you for your interest in contributing! This plugin adds Alibaba Cloud OAuth (device code + PKCE) authentication to [OpenCode](https://github.com/sst/opencode), letting users access Qwen models without an API key.
 
@@ -36,8 +36,8 @@ Before contributing, make sure you understand what this plugin does:
 
 ```bash
 # 1. Fork and clone the repo
-git clone https://github.com/<your-username>/opencode-qwen-oauth.git
-cd opencode-qwen-oauth
+git clone https://github.com/<your-username>/opencode-alibaba-oauth.git
+cd opencode-alibaba-oauth
 
 # 2. Install dependencies
 bun install

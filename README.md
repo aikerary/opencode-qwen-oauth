@@ -1,8 +1,8 @@
-# opencode-qwen-oauth
+# opencode-alibaba-oauth
 
-[![npm version](https://img.shields.io/npm/v/opencode-qwen-oauth?style=flat-square)](https://www.npmjs.com/package/opencode-qwen-oauth)
-[![npm downloads](https://img.shields.io/npm/dm/opencode-qwen-oauth?style=flat-square)](https://www.npmjs.com/package/opencode-qwen-oauth)
-[![CI](https://img.shields.io/github/actions/workflow/status/aikerary/opencode-qwen-oauth/ci.yml?style=flat-square&label=CI)](https://github.com/aikerary/opencode-qwen-oauth/actions)
+[![npm version](https://img.shields.io/npm/v/opencode-alibaba-oauth?style=flat-square)](https://www.npmjs.com/package/opencode-alibaba-oauth)
+[![npm downloads](https://img.shields.io/npm/dm/opencode-alibaba-oauth?style=flat-square)](https://www.npmjs.com/package/opencode-alibaba-oauth)
+[![CI](https://img.shields.io/github/actions/workflow/status/aikerary/opencode-alibaba-oauth/ci.yml?style=flat-square&label=CI)](https://github.com/aikerary/opencode-alibaba-oauth/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
@@ -36,14 +36,14 @@ No API key required. Just log in with your Alibaba Cloud / Qwen account.
 ```bash
 # Add to your opencode.json
 {
-  "plugin": ["opencode-qwen-oauth"]
+  "plugin": ["opencode-alibaba-oauth"]
 }
 ```
 
 Or install globally and reference by path:
 
 ```bash
-npm install -g opencode-qwen-oauth
+npm install -g opencode-alibaba-oauth
 ```
 
 ### Option B: Local plugin
@@ -52,10 +52,10 @@ Copy the plugin into your OpenCode plugins folder:
 
 ```bash
 # Global (all projects)
-cp -r opencode-qwen-oauth ~/.config/opencode/plugins/qwen-auth
+cp -r opencode-alibaba-oauth ~/.config/opencode/plugins/qwen-auth
 
 # Or project-level
-cp -r opencode-qwen-oauth .opencode/plugins/qwen-auth
+cp -r opencode-alibaba-oauth .opencode/plugins/qwen-auth
 ```
 
 When using as a local plugin, OpenCode loads `src/index.ts` directly via Bun — no build step needed.
